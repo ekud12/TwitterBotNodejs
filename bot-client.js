@@ -13,10 +13,9 @@ const tweet_search_query = process.env.BOT_TARGET_HASHES;
  */
 const params = {
   q: tweet_search_query,
-  result_type: "recent",
+  result_type: "mixed",
   lang: "en",
-  count: 20,
-  result_type: "popular"
+  count: 50
 };
 
 /**
@@ -24,7 +23,7 @@ const params = {
  *  from giphy's api.
  */
 async function getGif() {
-  const q = `clapping+sarcastic`;
+  const q = `clapping+sarcastic+sarcasm`;
   const res = await fetch(
     `http://api.giphy.com/v1/gifs/search?api_key=${
       config.giphy_key
