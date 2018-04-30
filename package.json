@@ -1,0 +1,15 @@
+{
+  "name": "twitterbot",
+  "version": "1.0.0",
+  "description": "a bot for twitter",
+  "main": "bot-client.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^5.0.1",
+    "twit": "^2.2.9"
+  }
+}
