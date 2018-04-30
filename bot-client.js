@@ -16,25 +16,22 @@ const params = {
   result_type: "popular"
 };
 
-const getGif = () => {
+async function getGif() {
   const q = `clapping+sarcastic`;
-  fetch(
+  const res = await fetch(
     `http://api.giphy.com/v1/gifs/search?api_key=${
       config.giphy_key
     }&q=${q}&limit=25`
-  )
-    .then(res => res.json())
-    .then(json => {
-      return ranDom(json.data).embed_url;
-    })
-    .catch(err => console.error(err));
-};
+  );
+  const json = await res.json();
+  return ranDom(json.data).images.fixed_height.url;
+}
 
 /**
  * This is a function that uses predefined object to
  * search Twitter's API.
  */
-const retweet = getGif => {
+const retweet = async () => {
   /**
    *  We call Giphy api to get an appropiate gif
    *  to Post with the link to the tweet, and after
@@ -44,34 +41,27 @@ const retweet = getGif => {
   const q = `clapping+sarcastic`;
   let mediaIdStr = "";
   let base64Gif = "";
-  fetch(
-    `http://api.giphy.com/v1/gifs/search?api_key=${
-      config.giphy_key
-    }&q=${q}&limit=25`
-  )
-    .then(res => res.json())
-    .then(json => {
-      const gifToPost = ranDom(json.data).images.fixed_height.url;
-
-      request.get(gifToPost, function(error, response, body) {
-        if (!error && response.statusCode == 200) {
-          base64Gif = new Buffer(body).toString("base64");
-          twitter.post(
-            "media/upload",
-            { media_data: base64Gif },
-            (err, data, response) => {
-              mediaIdStr = data.media_id_string;
-              twitter.get("search/tweets", params, (err, data) => {
-                if (!err) {
-                  const randomTweetId = ranDom(data.statuses).id_str;
-                  post(mediaIdStr, randomTweetId);
-                }
-              });
+  const gifToPost = await getGif();
+  console.log(`Stage 1 Finished - Got gif url: ${gifToPost}`);
+  request.get(gifToPost, function(error, response, body) {
+    if (!error && response.statusCode == 200) {
+      base64Gif = new Buffer(body).toString("base64");
+      twitter.post(
+        "media/upload",
+        { media_data: base64Gif },
+        (err, data, response) => {
+          mediaIdStr = data.media_id_string;
+          twitter.get("search/tweets", params, (err, data) => {
+            if (!err) {
+              const randomTweetId = ranDom(data.statuses).id_str;
+              post(mediaIdStr, randomTweetId);
             }
-          );
+          });
         }
-      });
-    });
+      );
+    }
+  });
+  // });
 };
 
 /**
