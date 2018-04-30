@@ -8,6 +8,9 @@ const config = require("./config.js");
 const twitter = new twit(config);
 const tweet_search_query = process.env.BOT_TARGET_HASHES;
 
+/**
+ * Params object for twit lib calls
+ */
 const params = {
   q: tweet_search_query,
   result_type: "recent",
@@ -16,6 +19,10 @@ const params = {
   result_type: "popular"
 };
 
+/**
+ *  Function to get random Gif direct Url.
+ *  from giphy's api.
+ */
 async function getGif() {
   const q = `clapping+sarcastic`;
   const res = await fetch(
@@ -28,45 +35,8 @@ async function getGif() {
 }
 
 /**
- * This is a function that uses predefined object to
- * search Twitter's API.
- */
-const retweet = async () => {
-  /**
-   *  We call Giphy api to get an appropiate gif
-   *  to Post with the link to the tweet, and after
-   *  the promise is resolved we use that data to
-   *  update the post + add retweet count.
-   */
-  const q = `clapping+sarcastic`;
-  let mediaIdStr = "";
-  let base64Gif = "";
-  const gifToPost = await getGif();
-  console.log(`Stage 1 Finished - Got gif url: ${gifToPost}`);
-  request.get(gifToPost, function(error, response, body) {
-    if (!error && response.statusCode == 200) {
-      base64Gif = new Buffer(body).toString("base64");
-      twitter.post(
-        "media/upload",
-        { media_data: base64Gif },
-        (err, data, response) => {
-          mediaIdStr = data.media_id_string;
-          twitter.get("search/tweets", params, (err, data) => {
-            if (!err) {
-              const randomTweetId = ranDom(data.statuses).id_str;
-              post(mediaIdStr, randomTweetId);
-            }
-          });
-        }
-      );
-    }
-  });
-  // });
-};
-
-/**
- * Util function - returns random item from
- * array.
+ * Util function to return random item from
+ * @param {*} arr the incoming array of objects
  */
 const ranDom = arr => {
   var index = Math.floor(Math.random() * arr.length);
@@ -79,8 +49,6 @@ const ranDom = arr => {
  * @param {*} tweetId the id of the tweet we are replying to
  */
 const post = (mediaId, tweetId) => {
-  console.log(mediaId);
-  console.log(tweetId);
   twitter.post(
     "statuses/update",
     {
@@ -101,6 +69,49 @@ const post = (mediaId, tweetId) => {
 };
 
 /**
+ * This is a function that uses predefined object to
+ * search Twitter's API.
+ */
+const tweet = async () => {
+  /**
+   *  We call Giphy api to get an appropiate gif
+   *  to Post with the link to the tweet, and after
+   *  the promise is resolved we use that data to
+   *  update the post.
+   */
+  const q = `clapping+sarcastic`;
+  let mediaIdStr = "";
+  let base64Gif = "";
+  const gifToPost = await getGif();
+  console.log(`Stage 1 Finished - Got gif url: ${gifToPost}`);
+  request.get(gifToPost, function(error, response, body) {
+    if (!error && response.statusCode == 200) {
+      base64Gif = new Buffer(body).toString("base64");
+      console.log(`Stage 2 Finished - Got gif base64: ${base64Gif.length}`);
+      twitter.post(
+        "media/upload",
+        { media_data: base64Gif },
+        (err, data, response) => {
+          mediaIdStr = data.media_id_string;
+          console.log(
+            `Stage 3 Finished - Got gif twitter Media id: ${mediaIdStr}`
+          );
+          twitter.get("search/tweets", params, (err, data) => {
+            if (!err) {
+              const randomTweetId = ranDom(data.statuses).id_str;
+              console.log(
+                `Stage 4 Finished - Got Random Twitt: ${randomTweetId}`
+              );
+              post(mediaIdStr, randomTweetId);
+            }
+          });
+        }
+      );
+    }
+  });
+};
+
+/**
  * Call the bot.
  */
-retweet();
+tweet();
