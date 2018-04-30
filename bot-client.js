@@ -3,6 +3,7 @@
  */
 const twit = require("twit");
 const fetch = require("node-fetch");
+const request = require("request").defaults({ encoding: null });
 const config = require("./config.js");
 const twitter = new twit(config);
 const tweet_search_query = process.env.BOT_TARGET_HASHES;
@@ -16,7 +17,6 @@ const getGif = () => {
   )
     .then(res => res.json())
     .then(json => {
-      console.log(ranDom(json.data).embed_url);
       return ranDom(json.data).embed_url;
     })
     .catch(err => console.error(err));
@@ -41,6 +41,8 @@ const retweet = getGif => {
    *  update the post + add retweet count.
    */
   const q = `clapping+sarcastic`;
+  let mediaIdStr = "";
+  let base64Gif = "";
   fetch(
     `http://api.giphy.com/v1/gifs/search?api_key=${
       config.giphy_key
@@ -48,32 +50,27 @@ const retweet = getGif => {
   )
     .then(res => res.json())
     .then(json => {
-      const gifToPost = ranDom(json.data).embed_url;
+      const gifToPost = ranDom(json.data).images.fixed_height.url;
 
-      twitter.get("search/tweets", params, (err, data) => {
-        if (!err) {
-          const randomTweet = ranDom(data.statuses);
+      request.get(gifToPost, function(error, response, body) {
+        if (!error && response.statusCode == 200) {
+          base64Gif = new Buffer(body).toString("base64");
           twitter.post(
-            "statuses/update",
-            {
-              status: gifToPost
-              // id: randomTweet.id_str
-            },
-            (err, response) => {
-              if (response) {
-                // console.log("Retweeted Successfully.");
-              }
-              if (err) {
-                // console.log("Tweeted Already.");
-              }
+            "media/upload",
+            { media_data: base64Gif },
+            (err, data, response) => {
+              mediaIdStr = data.media_id_string;
+              twitter.get("search/tweets", params, (err, data) => {
+                if (!err) {
+                  const randomTweetId = ranDom(data.statuses).id_str;
+                  post(mediaIdStr, randomTweetId);
+                }
+              });
             }
           );
-        } else {
-          console.log("Error Occured " + err);
         }
       });
-    })
-    .catch(err => console.error(err));
+    });
 };
 
 /**
@@ -85,4 +82,34 @@ const ranDom = arr => {
   return arr[index];
 };
 
+/**
+ * This function actually posts the tweet using the below params:
+ * @param {*} mediaId the id of the gif uploaded to media/upload api endpoint
+ * @param {*} tweetId the id of the tweet we are replying to
+ */
+const post = (mediaId, tweetId) => {
+  console.log(mediaId);
+  console.log(tweetId);
+  twitter.post(
+    "statuses/update",
+    {
+      status: "Well Done.",
+      auto_populate_reply_metadata: true,
+      in_reply_to_status_id: tweetId,
+      media_ids: [mediaId]
+    },
+    (err, response) => {
+      if (response) {
+        console.log(`Tweeted Successfully. Go Check it out!`);
+      }
+      if (err) {
+        console.log(`Error Occured: ${err}`);
+      }
+    }
+  );
+};
+
+/**
+ * Call the bot.
+ */
 retweet();
