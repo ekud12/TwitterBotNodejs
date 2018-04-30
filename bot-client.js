@@ -80,6 +80,11 @@ const tweet = async () => {
   let base64Gif = "";
   const gifToPost = await getGif();
   console.log(`Stage 1 Finished - Got gif url: ${gifToPost}`);
+  /**
+   * I Created a request object to get the gif from the url
+   * and when the req is valid, I take the body object that contains
+   * the gif and parse it to base64 (the format twitter require).
+   */
   request.get(gifToPost, function(error, response, body) {
     if (!error && response.statusCode == 200) {
       base64Gif = new Buffer(body).toString("base64");
