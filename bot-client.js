@@ -8,6 +8,14 @@ const config = require("./config.js");
 const twitter = new twit(config);
 const tweet_search_query = process.env.BOT_TARGET_HASHES;
 
+const params = {
+  q: tweet_search_query,
+  result_type: "recent",
+  lang: "en",
+  count: 20,
+  result_type: "popular"
+};
+
 const getGif = () => {
   const q = `clapping+sarcastic`;
   fetch(
@@ -27,13 +35,6 @@ const getGif = () => {
  * search Twitter's API.
  */
 const retweet = getGif => {
-  const params = {
-    q: tweet_search_query,
-    result_type: "recent",
-    lang: "en",
-    count: 20,
-    result_type: "popular"
-  };
   /**
    *  We call Giphy api to get an appropiate gif
    *  to Post with the link to the tweet, and after
