@@ -69,16 +69,12 @@ const post = (mediaId, tweetId) => {
 };
 
 /**
- * This is a function that uses predefined object to
- * search Twitter's API.
+ *  We call Giphy api to get an appropiate gif
+ *  to Post with the link to the tweet, and after
+ *  the promise is resolved we use that data to
+ *  post a twitt with the text: "Well done" and the gif.
  */
 const tweet = async () => {
-  /**
-   *  We call Giphy api to get an appropiate gif
-   *  to Post with the link to the tweet, and after
-   *  the promise is resolved we use that data to
-   *  update the post.
-   */
   const q = `clapping+sarcastic`;
   let mediaIdStr = "";
   let base64Gif = "";
